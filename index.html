@@ -15,6 +15,11 @@ input[type=text]{background:#111312;color:var(--fg);border:1px solid var(--ln);b
 #top{height:42px;display:flex;align-items:center;gap:4px;padding:5px}
 #bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;align-items:center}
 #st{color:#a9aea8;padding:0 6px;flex:none}#tabs,#pn{display:flex;gap:6px}
+#ver{color:#6d726d;font-size:11px;padding:0 6px;flex:none}
+#pm,#cm{position:fixed;z-index:9;background:var(--pan);border:1px solid var(--ln);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+#pm{width:340px;max-height:70vh;overflow:auto}#cm{max-width:260px;padding:6px;gap:4px}#cm button{text-align:left;overflow:hidden;text-overflow:ellipsis}
+.pr{border-top:1px solid var(--ln);padding-top:6px}.pn{font-weight:600;margin-bottom:4px}.gr2{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}.gr2 button{padding:3px 8px}
+#toast{position:fixed;top:52px;left:50%;transform:translateX(-50%);background:#7a2b2b;color:#fff;padding:8px 14px;border-radius:10px;z-index:12;cursor:pointer}
 #mm{position:fixed;inset:0;background:#000c;z-index:9;display:flex;align-items:center;justify-content:center}#mm>div{background:var(--pan);border:1px solid var(--ln);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;text-align:center}
 #mh{position:fixed;z-index:8;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:var(--ac);color:#1b1b17;border-radius:6px;cursor:grab;touch-action:none;user-select:none}
 #fb{position:fixed;z-index:8;background:var(--pan);border:1px solid var(--ln);border-radius:10px;padding:4px 6px;display:flex;align-items:center;gap:4px}#fb button{padding:3px 8px}
@@ -38,29 +43,29 @@ body[data-r=student] .t{display:none!important}
 <div id="app" hidden>
  <div id="top"><button onclick="bar.scrollBy(-220,0)">‹</button>
   <div id="bar">
-   <button id="bs" class="go t" onclick="meet()">Toplantıyı Başlat</button><button id="bl" class="t" onclick="cpLink()" hidden>Bağlantıyı Kopyala</button>
+   <button id="bs" class="go t" onclick="meet()">Toplantıyı Başlat</button><button id="bl" class="t" onclick="cpLink()" hidden>Bağlantıyı Kopyala</button><button id="bpm" class="t" onclick="permPanel()">Öğrenci İzinleri</button>
    <button class="t" onclick="$('fi').click()">Dosya Ekle</button><input id="fi" type="file" accept="application/pdf,image/*" multiple hidden onchange="addFiles([...this.files]);this.value=''"><span id="tabs" class="t"></span><span id="pn" class="t" hidden><button onclick="pageGo(-1)">‹ Önceki</button><button id="pl" title="Sayfayı sığdır" onclick="pfit()">1 / 1</button><button onclick="pageGo(1)">Sonraki ›</button></span>
-   <button id="bm" onclick="tg('audio',this)">Mikrofon: Açık</button><button id="bc" onclick="tg('video',this)">Kamera: Açık</button><button onclick="swCam()">Kamerayı Değiştir</button>
-   <button class="t" onclick="zoom(1/1.2)">−</button><button class="t" onclick="zoom(1.2)">+</button><button class="t" onclick="z=1;view()">Enine Sığdır</button>
+   <button id="bm" onclick="tg('audio',this)">Mikrofon: Açık</button><button id="bc" onclick="tg('video',this)">Kamera: Açık</button><button id="bcm" onclick="camMenu(this)">Kamerayı Değiştir ▾</button>
+   <button id="bzo" onclick="zoom(1/1.2)">−</button><button id="bzi" onclick="zoom(1.2)">+</button><button id="bzf" onclick="z=1;view()">Enine Sığdır</button>
    <button id="bsc" class="t" onclick="scr()">Ekranı Paylaş</button><button onclick="printS()">Yazdır</button><button id="bf" onclick="fs()">Tam Ekran</button><button id="bpo" class="t" title="Açıkken kalem çizer, parmak tahtayı kaydırır" onclick="penOnly=!penOnly;this.classList.toggle('on',penOnly);this.textContent='Kalem Modu: '+(penOnly?'Açık':'Kapalı')">Kalem Modu: Kapalı</button></div>
-  <button onclick="bar.scrollBy(220,0)">›</button><span id="st"></span></div>
+  <button onclick="bar.scrollBy(220,0)">›</button><button id="bfo" hidden onclick="follow=1;this.hidden=1;lv&&applyView(lv)">Öğretmeni takip et</button><span id="st"></span><span id="ver">v8</span></div>
  <div id="stage"><canvas id="cv"></canvas></div>
  <div id="tb" class="t v"><div id="hd" title="Taşı">⠿</div></div><div id="pop" hidden></div>
- <div id="tiles"></div><video id="scr" hidden autoplay playsinline></video>
+ <div id="tiles"></div><div id="pm" hidden></div><div id="cm" hidden></div><div id="toast" hidden onclick="this.hidden=1"></div><video id="scr" hidden autoplay playsinline></video>
  <div id="mm" hidden><div><b>Belge nasıl gösterilsin?</b><div class="row"><button class="go" data-v="all">Tüm sayfalar alt alta</button><button data-v="one">Sayfa sayfa (slayt)</button></div></div></div>
  <div id="mh" hidden title="Taşı">⠿</div><div id="fb" hidden><button data-b="f-">A−</button><button data-b="f+">A+</button><button data-b="b"><b>B</b></button><button data-b="i"><i>I</i></button><button data-b="fam">Aa</button><button data-b="al">≡</button><span class="sw"><i data-bc="0"></i><i data-bc="1"></i><i data-bc="2"></i><i data-bc="3"></i><i data-bc="4"></i><i data-bc="5"></i></span></div>
  <div id="sb" hidden><button data-a="del">Sil</button><span id="tx2" hidden><button data-a="f-">A−</button><button data-a="f+">A+</button><button data-a="b"><b>B</b></button><button data-a="i"><i>I</i></button><button data-a="fam">Aa</button><button data-a="al">≡</button></span><span class="sw"><i data-c="0"></i><i data-c="1"></i><i data-c="2"></i><i data-c="3"></i><i data-c="4"></i><i data-c="5"></i></span></div>
 </div>
-<div class="c" id="join" hidden><h1>Derse katıl</h1><input id="rin" type="text" placeholder="Oda kodu veya bağlantı" size="30"><button class="go" style="padding:10px 18px" onclick="joinRoom()">Katıl</button><div id="jm"></div></div>
+<div class="c" id="join" hidden><h1>Derse katıl</h1><input id="rin" type="text" placeholder="Oda kodu veya bağlantı" size="30"><input id="nm" type="text" placeholder="Adın" size="30"><div style="color:#b8bdb6;max-width:340px">Derse katılmak için kamera ve mikrofon izni ver.</div><button class="go" style="padding:10px 18px" onclick="joinRoom()">Katıl</button><div id="jm"></div></div>
 <script>
 const $=id=>document.getElementById(id),bar=$('bar'),cv=$('cv'),PW=800,PH=1131,GAP=24,M=24;
 const PAL=[['#f4f3ec','#f2d96b','#7fc4f0','#f09ab8','#8fe0a4','#f2a36b'],['#1b1b1b','#b58a00','#1f6fb5','#c2306a','#2e8b4f','#d2691e']];
 const S={tx:{fam:'sans',fs:28,b:0,i:0,c:0,al:'c'},pen:{w:2.5,c:0},hl:{w:20,c:1},er:{w:24,m:'part'},sh:{w:2.5,c:0,t:'line',a:1,f:0}};
 const SH=[['line','Çizgi'],['dash','Kesikli'],['arrow','Ok'],['rect','Dörtgen'],['tri','Üçgen'],['rtri','Dik üçgen'],['ell','Elips/Daire']];
 const TH=[['b','Siyah'],['bg','Siyah kareli'],['w','Beyaz'],['wg','Beyaz kareli']];
-let role,peer,local,conns=[],calls=[],objs=[],cur=null,hist=[],redo=[],theme='b',pg=[{h:PH},{h:PH},{h:PH}],sheets=[{}],cs=0,zi=0,pr=0,sel=[],sm=0,sa,so={},sb_,sh_,selR=null,ft=0,ht=0,ha=null,perfect=0,rec=0,recOn=1,lp,tt=0,fqt=0,te=null,editId=null,tp,fp=0,pinch=null,penOnly=0,ptrs={},scrS=null,scrCalls=[],z=1,ox=0,oy=0,cw=1,ch=1,tool='pen',mode='pan',laser=null,dirty=1,room,dn=0,last,start,vt=0,side='l',lv=null,uid=0;
+let role,peer,local,conns=[],calls=[],objs=[],cur=null,hist=[],redo=[],theme='b',pg=[{h:PH},{h:PH},{h:PH}],sheets=[{}],cs=0,zi=0,pr=0,sel=[],sm=0,sa,so={},sb_,sh_,selR=null,ft=0,perm={scroll:0,zoom:0,write:0,erase:0,hand:0},follow=1,pb=null,ht=0,ha=null,perfect=0,rec=0,recOn=1,lp,tt=0,fqt=0,te=null,editId=null,tp,fp=0,pinch=null,penOnly=0,ptrs={},scrS=null,scrCalls=[],z=1,ox=0,oy=0,cw=1,ch=1,tool='pen',mode='pan',laser=null,dirty=1,room,dn=0,last,start,vt=0,side='l',lv=null,uid=0;
 const dark=()=>!pr&&!cs&&theme[0]==='b',pal=()=>PAL[dark()?0:1],sc=()=>cw/(PW+2*M)*z,note=t=>$('st').textContent=t;
-function go(r){role=r;document.body.dataset.r=r;$('home').hidden=1;$('app').hidden=0;init();if(r==='student'){$('join').hidden=0;const m=location.hash.match(/oda=([\w-]+)/);if(m)$('rin').value=m[1]}}
+function go(r){role=r;document.body.dataset.r=r;$('home').hidden=1;$('app').hidden=0;init();if(r==='student'){$('join').hidden=0;const m=location.hash.match(/oda=([\w-]+)/);if(m)$('rin').value=m[1];try{$('nm').value=localStorage.getItem('nm')||''}catch(_){}}applyPerm()}
 function fs(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
 document.onfullscreenchange=()=>$('bf').textContent=document.fullscreenElement?'Tam Ekranı Kapat':'Tam Ekran';
 /* görünüm */
@@ -68,7 +73,7 @@ function clamp(){const s=sc(),vw=cw/s,vh=ch/s,dh=dhf();
  ox=vw>=PW+2*M?-(vw-PW)/2:Math.min(Math.max(ox,-M),PW+M-vw);
  const sh=sheets[cs];if(sh&&sh.one){const pi=sh.pi||0,t=ptop(pi),h=pg[pi].h;oy=vh>=h+2*M?t-(vh-h)/2:Math.min(Math.max(oy,t-M),t+h+M-vh)}else oy=Math.min(Math.max(oy,-M),Math.max(-M,dh-vh+M));
  if(!cs&&role==='teacher'&&oy+vh>dh-PH*.3){pg.push({h:PH});send({k:'pg',n:pg.length})}dirty=1}
-function view(){if(role!=='teacher')return;clamp();if(vt)return;vt=setTimeout(()=>{vt=0;send({k:'view',z,x:ox+cw/sc()/2,y:oy})},50)}
+function view(){if(role!=='teacher'){follow=0;$('bfo').hidden=0;clamp();dirty=1;return}clamp();if(vt)return;vt=setTimeout(()=>{vt=0;send({k:'view',z,x:ox+cw/sc()/2,y:oy})},50)}
 function zoomAt(cx,cy,f){const r=cv.getBoundingClientRect(),p=pt({clientX:cx,clientY:cy});z=Math.min(5,Math.max(.2,z*f));const s=sc();ox=p[0]-(cx-r.left)/s;oy=p[1]-(cy-r.top)/s;view()}
 function zoom(f){const r=cv.getBoundingClientRect();zoomAt(r.left+cw/2,r.top+ch/2,f)}
 const pt=e=>{const r=cv.getBoundingClientRect(),s=sc();return[(e.clientX-r.left)/s+ox,(e.clientY-r.top)/s+oy]};
@@ -96,22 +101,22 @@ function render(){dirty=0;const g=cv.getContext('2d'),d=devicePixelRatio||1,s=sc
 function hit(o,x,y,r){if(o.t==='text')return x>=o.x1-r&&x<=o.x2+r&&y>=o.y1-r&&y<=o.y2+r;const p=o.p||poly(o),R=r+o.w/2;for(let i=0;i<p.length;i++){const a=p[i],b=p[i+1]||a,dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/l)):0;if(Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy)<R)return 1}return 0}
 function snap(){hist.push(objs.slice());redo=[]}
 function erase(p){if(S.er.m==='part')return eraseP(p);const n=objs.filter(o=>!hit(o,p[0],p[1],S.er.w/2));if(n.length!==objs.length){objs=n;fq();dirty=1}}
-function setL(p){laser={x:p[0],y:p[1],t:Date.now()};send({k:'las',x:p[0],y:p[1]})}
+function setL(p){if(role!=='teacher'&&!perm.hand)return;laser={x:p[0],y:p[1],t:Date.now()};send({k:'las',x:p[0],y:p[1]})}
 let lt=0;
-cv.onpointerdown=e=>{if(role!=='teacher')return;pop(0);cv.setPointerCapture(e.pointerId);if(e.pointerType==='pen'&&(e.buttons&34)&&tool!=='er'){tt=tool;tool='er'}if(touchDown(e))return;const p=pt(e);dn=1;fp=0;perfect=0;rec=0;clearTimeout(ht);ht=0;ha=null;last=[e.clientX,e.clientY];
+cv.onpointerdown=e=>{if(!canI())return;if(pt_){pop(0);return}cv.setPointerCapture(e.pointerId);if(e.pointerType==='pen'&&(e.buttons&34)&&tool!=='er'){tt=tool;tool='er'}if(touchDown(e))return;const p=pt(e);dn=1;fp=0;perfect=0;rec=0;clearTimeout(ht);ht=0;ha=null;last=[e.clientX,e.clientY];
  if(tool==='hand'){if(mode==='laser')setL(p);return}
  if(tool==='er'){snap();erase(p);return}if(tool==='sel')return selDown(p,e);if(tool==='tx'){tp=p;return}
  const id=++uid+'_'+Date.now();start=p;
  if(tool==='sh')cur={id,t:S.sh.t,c:S.sh.c,w:S.sh.w,x1:p[0],y1:p[1],x2:p[0],y2:p[1],a:S.sh.a,f:S.sh.f};
  else cur={id,t:tool,c:S[tool].c,w:S[tool].w,p:[p],ds:tool==='pen'&&S.pen.d?1:0};dirty=1};
 cv.onpointermove=e=>{if(e.pointerType==='touch'&&ptrs[e.pointerId]){ptrs[e.pointerId]=[e.clientX,e.clientY];if(Object.keys(ptrs).length>1){gest();return}if(fp&&dn){const s=sc();ox-=(e.clientX-last[0])/s;oy-=(e.clientY-last[1])/s;last=[e.clientX,e.clientY];view();return}}if(!dn||fp)return;const p=pt(e);
- if(tool==='hand'){if(mode==='laser')setL(p);else{const s=sc();ox-=(e.clientX-last[0])/s;oy-=(e.clientY-last[1])/s;last=[e.clientX,e.clientY];view()}return}
+ if(tool==='hand'){if(mode==='laser')setL(p);else if(role==='teacher'||perm.scroll){const s=sc();ox-=(e.clientX-last[0])/s;oy-=(e.clientY-last[1])/s;last=[e.clientX,e.clientY];view()}return}
  if(tool==='er'){erase(p);return}if(tool==='sel')return selMove(p,e);if(!cur)return;
  if(rec)return;if(cur.p){const q=cur.p[cur.p.length-1];if(Math.hypot(p[0]-q[0],p[1]-q[1])>.6)cur.p.push(p)}
  else{shp(p,e.shiftKey?1:perfect?2:0)}
  holdT(e);dirty=1;if(Date.now()-lt>60){lt=Date.now();send({k:'cur',o:cur})}};
 cv.onpointerup=cv.onpointercancel=e=>{if(tt){tool=tt;tt=0}clearTimeout(ht);ht=0;if(e.pointerType==='touch'){delete ptrs[e.pointerId];pinch=null;if(Object.keys(ptrs).length>1)gest();if(fp){fp=0;dn=0;return}}if(!dn)return;dn=0;if(tool==='tx')return txUp();if(tool==='sel')return selUp();if(cur){snap();objs.push(cur);send({k:'add',o:cur});cur=null;dirty=1}};
-cv.onwheel=e=>{if(role!=='teacher')return;e.preventDefault();if(e.ctrlKey)zoomAt(e.clientX,e.clientY,e.deltaY<0?1.1:1/1.1);else{oy+=e.deltaY/sc();view()}};
+cv.onwheel=e=>{const T=role==='teacher';if(!T&&!perm.scroll&&!perm.zoom)return;e.preventDefault();if(e.ctrlKey){if(T||perm.zoom)zoomAt(e.clientX,e.clientY,e.deltaY<0?1.1:1/1.1)}else if(T||perm.scroll){oy+=e.deltaY/sc();view()}};
 function undo(){sel=[];if(hist.length){redo.push(objs);objs=hist.pop();full();dirty=1}}
 function redoF(){sel=[];if(redo.length){hist.push(objs);objs=redo.pop();full();dirty=1}}
 function setTheme(t){theme=t;send({k:'th',v:t});dirty=1}
@@ -124,8 +129,8 @@ const TOOLS=[['hand','El',ic('<path d="M7.5 13V6a1.5 1.5 0 0 1 3 0v4.5V4a1.5 1.5
 function init(){const tb=$('tb');TOOLS.forEach(([id,t,s])=>{const b=document.createElement('button');b.dataset.t=id;b.title=t;b.innerHTML=s;tb.appendChild(b)});
  tb.onclick=e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.t;
   if(id==='un')return undo();if(id==='re')return redoF();if(id==='cl'){sel=[];snap();objs=[];full();dirty=1;return}
-  if(id==='bd')return pop(id,b);
-  if(tool===id)return id==='sel'?0:pop(id,b);
+  if(id==='bd')return pt_==='bd'?pop(0):pop(id,b);
+  if(tool===id)return id==='sel'?0:pt_===id?pop(0):pop(id,b);
   tool=id;sel=[];selR=null;dirty=1;pop(0);tb.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b))};
  tb.querySelector('[data-t=pen]').classList.add('on');dock('l');
  $('tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;b.dataset.x?closeDoc(+b.dataset.x):sheet(+b.dataset.i)};tabs();
@@ -136,12 +141,12 @@ function init(){const tb=$('tb');TOOLS.forEach(([id,t,s])=>{const b=document.cre
  hd.onpointerup=e=>{if(!dg)return;dg=0;const W=innerWidth,H=innerHeight,d={l:e.clientX,r:W-e.clientX,t:e.clientY,b:H-e.clientY};dock(Object.keys(d).sort((a,b)=>d[a]-d[b])[0])};
  new ResizeObserver(()=>{const r=$('stage').getBoundingClientRect(),d=devicePixelRatio||1;cw=r.width;ch=r.height;if(!zi){zi=1;z=1}cv.width=cw*d;cv.height=ch*d;if(role==='student'&&lv)applyView(lv);else clamp();dirty=1}).observe($('stage'));
  $('pop').onclick=pc;$('pop').oninput=e=>{const t=pt_,k=e.target;if(k.type==='range'){if(k.dataset.k==='a')S.sh.a=+k.value;else if(t==='tx')S.tx.fs=+k.value;else(t==='er'?S.er:t==='sh'?S.sh:S[t]).w=+k.value;txSync()}};
- $('pop').onchange=()=>pop(0);
+ 
  if(role==='student')note('Katılmak için oda kodunu gir')}
-function dock(s){side=s;const tb=$('tb');tb.className='t '+(s==='l'||s==='r'?'v':'h');
+function dock(s){side=s;const tb=$('tb');tb.className=(role==='teacher'?'t ':'')+(s==='l'||s==='r'?'v':'h');
  tb.style.cssText={l:'left:8px;top:54px',r:'right:8px;top:54px',t:'top:50px;left:50%;transform:translateX(-50%)',b:'bottom:8px;left:50%;transform:translateX(-50%)'}[s]}
 let pt_=null;
-function pop(t,b){const P=$('pop');if(!t){P.hidden=1;pt_=null;return}pt_=t;
+function pop(t,b){const P=$('pop');if(!t){P.hidden=1;pt_=null;return}pt_=t;if(b)pb=b;b=pb;
  const sw=c=>pal().map((x,i)=>`<i data-c="${i}" style="background:${x}" class="${c===i?'on':''}"></i>`).join(''),rg=(a,m,v)=>`<input type="range" min="${a}" max="${m}" step=".5" value="${v}">`;let h='';
  if(t==='pen'||t==='hl')h=`<label>Kalınlık${rg(1,t==='hl'?40:10,S[t].w)}</label><div class="sw">${sw(S[t].c)}</div>`+(t==='pen'?`<div class="gr"><button data-pd="0" class="${S.pen.d?'':'on'}">Düz</button><button data-pd="1" class="${S.pen.d?'on':''}">Kesikli</button></div><button data-rc="1" style="margin-top:4px;width:100%">Şekil tanıma: ${recOn?'Açık':'Kapalı'}</button>`:'');
  else if(t==='er')h=`<div class="gr"><button data-em="line" class="${S.er.m==='line'?'on':''}">Çizgiyi sil</button><button data-em="part" class="${S.er.m==='part'?'on':''}">Dokunduğunu sil</button></div><label>Silgi boyutu${rg(8,80,S.er.w)}</label>`;
@@ -154,11 +159,11 @@ function pop(t,b){const P=$('pop');if(!t){P.hidden=1;pt_=null;return}pt_=t;
  P.style.left=Math.max(4,Math.min(x,innerWidth-w-4))+'px';P.style.top=Math.max(4,Math.min(y,innerHeight-hh-4))+'px'}
 function pc(e){const d=e.target.dataset,t=pt_;let done=0;
  if(d.c!==undefined){(t==='sh'?S.sh:S[t]).c=+d.c;done=1}if(d.s){S.sh.t=d.s;done=1}if(d.m){mode=d.m;done=1}if(d.th){setTheme(d.th);done=1}if(d.f){S.tx.fam=d.f;done=1}if(d.al){S.tx.al=d.al;done=1}if(d.pd!==undefined){S.pen.d=+d.pd;done=1}if(d.rc){recOn=!recOn;done=1}if(d.fl){S.sh.f=S.sh.f?0:1;done=1}if(d.tb){S.tx[d.tb]=S.tx[d.tb]?0:1;done=1}if(d.em){S.er.m=d.em;done=1}
- if(done){pop(0);txSync()}}
+ if(done){pop(t,pb);txSync()}}
 /* belgeler */
 const PJ='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.',dhf=()=>pg.reduce((a,p)=>a+p.h+GAP,0),padd=n=>{while(pg.length<n)pg.push({h:PH})};
 function saveS(){Object.assign(sheets[cs],{o:objs,hist,redo,z,ox,oy,pg})}
-function sheet(i){if(i===cs)return;saveS();cs=i;const s=sheets[i];objs=s.o||[];hist=s.hist||[];redo=s.redo||[];pg=s.pg;if(s.z==null){z=1;ox=oy=0}else{z=s.z;ox=s.ox;oy=s.oy}cur=null;dn=0;sel=[];pop(0);tabs();send({k:'sheet',i});if(s.one&&s.z==null)pfit();else view();dirty=1}
+function sheet(i){if(i===cs)return;saveS();cs=i;const s=sheets[i];objs=s.o||[];hist=s.hist||[];redo=s.redo||[];pg=s.pg;if(s.z==null){z=1;ox=oy=0}else{z=s.z;ox=s.ox;oy=s.oy}cur=null;dn=0;sel=[];pop(0);tabs();send({k:'sheet',i});if(s.one&&s.z==null)pfit();else if(role==='teacher')view();dirty=1}
 function tabs(){$('tabs').innerHTML=sheets.map((s,i)=>`<button data-i="${i}" class="${i===cs?'on':''}">${i?i+'. Belge':'Tahta'}</button>`+(i&&i===cs?`<button data-x="${i}" title="Belgeyi kapat">✕</button>`:'')).join('');pnav()}
 function addDoc(P,one){sheets.push({pg:P,one:one?1:0,pi:0});const i=sheets.length-1;send({k:'doc',i,hs:P.map(p=>p.h)});P.forEach((p,j)=>send({k:'pimg',i,j,u:p.img.src}));sheet(i)}
 function closeDoc(i){if(cs===i)sheet(0);sheets.splice(i,1);if(cs>i)cs--;send({k:'close',i});tabs()}
@@ -176,7 +181,7 @@ async function addFiles(fs){for(const f of fs){try{
 function touchDown(e){if(e.pointerType!=='touch')return 0;ptrs[e.pointerId]=[e.clientX,e.clientY];
  if(Object.keys(ptrs).length>1){cur=null;sm=0;selR=null;pinch=null;dn=0;gest();dirty=1;return 1}
  if(penOnly){dn=1;fp=1;last=[e.clientX,e.clientY];return 1}return 0}
-function gest(){const k=Object.keys(ptrs);if(k.length<2){pinch=null;return}const a=ptrs[k[0]],b=ptrs[k[1]],d=Math.hypot(a[0]-b[0],a[1]-b[1]),c=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+function gest(){const k=Object.keys(ptrs);if(k.length<2){pinch=null;return}if(role!=='teacher'&&!perm.zoom)return;const a=ptrs[k[0]],b=ptrs[k[1]],d=Math.hypot(a[0]-b[0],a[1]-b[1]),c=[(a[0]+b[0])/2,(a[1]+b[1])/2];
  if(pinch&&d>0&&pinch.d>0){zoomAt(c[0],c[1],d/pinch.d);const s=sc();ox-=(c[0]-pinch.c[0])/s;oy-=(c[1]-pinch.c[1])/s;view()}pinch={d,c}}
 function fq(){if(!fqt)fqt=setTimeout(()=>{fqt=0;full()},60)}
 function dens(a){const o=[];a.forEach((q,i)=>{if(i){const d=Math.hypot(q[0]-a[i-1][0],q[1]-a[i-1][1]),n=Math.ceil(d/3);for(let k=1;k<n;k++)o.push([a[i-1][0]+(q[0]-a[i-1][0])*k/n,a[i-1][1]+(q[1]-a[i-1][1])*k/n])}o.push(q)});return o}
@@ -261,6 +266,49 @@ function pageGo(d){const sh=sheets[cs];if(!sh||!sh.one)return;const n=Math.max(0
 function askMode(){return new Promise(r=>{const m=$('mm');m.hidden=0;m.onclick=e=>{const v=e.target.dataset.v;if(v){m.hidden=1;r(v==='one')}}})}
 document.addEventListener('keydown',e=>{const sh=sheets[cs];if(role!=='teacher'||te||!sh||!sh.one)return;
  if(['ArrowRight','ArrowDown','PageDown'].includes(e.key)){pageGo(1);e.preventDefault()}else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){pageGo(-1);e.preventDefault()}});
+/* izinler, kamera menüsü, uyarılar */
+const defPerm={scroll:0,zoom:0,write:0,erase:0,hand:0},defMed={a:1,v:1},PK=[['scroll','Kaydır'],['zoom','Büyüt'],['write','Yaz'],['erase','Sil'],['hand','El']];
+const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const canI=()=>role==='teacher'||perm.scroll||perm.zoom||perm.write||perm.erase||perm.hand;
+const sendEx=(m,c)=>conns.forEach(x=>x!==c&&x.open&&x.send(m));
+function toast(t){const e=$('toast');e.textContent=t;e.hidden=0;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=1,9000)}
+function gone(c){if(c._g)return;c._g=1;conns=conns.filter(x=>x!==c);toast((c.nm||'Öğrenci')+' bağlantısı koptu');pmRender()}
+function watchIce(c){const p=c.peerConnection;if(!p)return;p.addEventListener('iceconnectionstatechange',()=>{const s=p.iceConnectionState;clearTimeout(c._t);
+ if(s==='failed'||s==='closed')gone(c);else if(s==='disconnected')c._t=setTimeout(()=>{if(p.iceConnectionState==='disconnected')gone(c)},6000)})}
+function tMsg(c,m){const P=c.perm||{};
+ if(m.k==='hi'){c.nm=String(m.name||'Öğrenci').slice(0,30);pmRender()}
+ else if(m.k==='add'&&P.write&&m.o){objs.push(m.o);sendEx(m,c);dirty=1}
+ else if(m.k==='full'&&(P.erase||P.write)&&Array.isArray(m.o)){objs=m.o;sendEx({k:'full',o:objs,th:theme,n:pg.length},c);dirty=1}
+ else if(m.k==='las'&&P.hand){laser={x:m.x,y:m.y,t:Date.now()};sendEx(m,c)}}
+function applyPerm(){const T=role==='teacher',P=perm,ok=k=>T||P[k];
+ ['bzo','bzi','bzf'].forEach(id=>$(id).hidden=!(T||P.zoom));
+ $('tb').hidden=!(T||P.scroll||P.zoom||P.write||P.erase||P.hand);
+ const al={hand:ok('scroll')||ok('hand'),pen:ok('write'),hl:ok('write'),sh:ok('write'),tx:ok('write'),er:ok('erase')};
+ $('tb').querySelectorAll('[data-t]').forEach(b=>{b.hidden=T?false:!al[b.dataset.t]});
+ if(!T){if(!al[tool]){const f=Object.keys(al).find(k=>al[k]);if(f){tool=f;$('tb').querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x.dataset.t===f))}}mode=P.scroll?'pan':'laser'}}
+function medCmd(m){if(!local)return;local.getAudioTracks().forEach(t=>t.enabled=!!m.a);local.getVideoTracks().forEach(t=>t.enabled=!!m.v);
+ $('bm').textContent='Mikrofon: '+(m.a?'Açık':'Kapalı');$('bc').textContent='Kamera: '+(m.v?'Açık':'Kapalı');
+ if(!m.a||!m.v)toast('Öğretmen '+(!m.a&&!m.v?'mikrofon ve kameranı':!m.a?'mikrofonunu':'kameranı')+' kapattı')}
+function tileMedia(c){if(!c.med)return;const v=$('v_'+c.peer);if(v){v.muted=!c.med.a;v.style.visibility=c.med.v?'visible':'hidden'}}
+function pmRows(){return[{n:'Yeni katılanlar',p:defPerm,m:defMed},...conns.filter(c=>c.perm).map(c=>({n:c.nm||'Öğrenci',p:c.perm,m:c.med,c}))]}
+function pmRender(){const P=$('pm');if(P.hidden)return;
+ P.innerHTML='<b>Öğrenci izinleri</b>'+pmRows().map((r,i)=>`<div class="pr"><div class="pn">${esc(r.n)}</div><div class="gr2">${PK.map(([k,n])=>`<button data-r="${i}" data-k="${k}" class="${r.p[k]?'on':''}">${n}</button>`).join('')}<button data-r="${i}" data-full="1" class="${PK.every(([k])=>r.p[k])?'on':''}">Tam yetki</button></div><div class="gr2"><button data-r="${i}" data-m="a" class="${r.m.a?'on':''}">Mikrofon: ${r.m.a?'Açık':'Kapalı'}</button><button data-r="${i}" data-m="v" class="${r.m.v?'on':''}">Kamera: ${r.m.v?'Açık':'Kapalı'}</button></div></div>`).join('')}
+function pmApply(c){if(c.open){c.send({k:'perm',p:c.perm});c.send({k:'media',a:c.med.a,v:c.med.v})}tileMedia(c)}
+$('pm').onclick=e=>{const b=e.target.closest('button');if(!b)return;const r=pmRows()[+b.dataset.r];if(!r)return;const d=b.dataset;
+ if(d.k)r.p[d.k]=r.p[d.k]?0:1;else if(d.full){const all=PK.every(([k])=>r.p[k]);PK.forEach(([k])=>r.p[k]=all?0:1)}else if(d.m)r.m[d.m]=r.m[d.m]?0:1;
+ if(r.c)pmApply(r.c);pmRender()};
+function permPanel(){const P=$('pm'),b=$('bpm');P.hidden=!P.hidden;if(P.hidden)return;pmRender();const r=b.getBoundingClientRect();P.style.left=Math.max(4,Math.min(r.left,innerWidth-P.offsetWidth-4))+'px';P.style.top=r.bottom+4+'px'}
+async function camMenu(b){const m=$('cm');if(!m.hidden){m.hidden=1;return}if(!local||!navigator.mediaDevices)return note('Önce kamerayı başlat');
+ const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='videoinput'),cur=local.getVideoTracks()[0],cid=cur&&cur.getSettings().deviceId;
+ if(d.length<2)return note('Başka kamera bulunamadı');
+ m.innerHTML=d.map((x,i)=>`<button data-d="${esc(x.deviceId)}" class="${x.deviceId===cid?'on':''}">${esc(x.label||'Kamera '+(i+1))}</button>`).join('');m.hidden=0;
+ const r=b.getBoundingClientRect();m.style.left=Math.max(4,Math.min(r.left,innerWidth-m.offsetWidth-4))+'px';m.style.top=r.bottom+4+'px'}
+$('cm').onclick=e=>{const id=e.target.dataset.d;if(id){$('cm').hidden=1;setCam(id)}};
+async function setCam(id){const o=local.getVideoTracks()[0],old=o&&o.getSettings().deviceId,en=o?o.enabled:true;
+ const put=async did=>{const n=(await navigator.mediaDevices.getUserMedia({video:{deviceId:{exact:did}}})).getVideoTracks()[0];n.enabled=en;local.addTrack(n);
+  calls.forEach(c=>{const s=c.peerConnection.getSenders().find(x=>x.track&&x.track.kind==='video');s&&s.replaceTrack(n)});tile('self',local,1)};
+ try{if(o){o.stop();local.removeTrack(o)}await put(id)}catch(e){note('Kamera değiştirilemedi: '+e.name);try{if(old)await put(old)}catch(_){}}}
+document.addEventListener('pointerdown',e=>{if(pt_&&!e.target.closest('#pop,#tb,#cv'))pop(0);if(!$('cm').hidden&&!e.target.closest('#cm,#bcm'))$('cm').hidden=1;if(!$('pm').hidden&&!e.target.closest('#pm,#bpm'))$('pm').hidden=1},true);
 /* seçim */
 const cors=b=>[[b[0],b[1]],[b[2],b[1]],[b[2],b[3]],[b[0],b[3]]],cl5=v=>Math.abs(v)<.05?.05:v;
 function ob(o){let a=1e9,b=1e9,c=-1e9,d=-1e9;(o.p||poly(o)).forEach(q=>{a=Math.min(a,q[0]);b=Math.min(b,q[1]);c=Math.max(c,q[0]);d=Math.max(d,q[1])});return[a,b,c,d]}
@@ -301,32 +349,32 @@ function stopScr(){if(!scrS)return;scrCalls.forEach(c=>c.close());scrCalls=[];sc
 function syncAll(c){saveS();sheets.forEach((s,i)=>{if(i){c.send({k:'doc',i,hs:s.pg.map(p=>p.h)});s.pg.forEach((p,j)=>c.send({k:'pimg',i,j,u:p.img.src}))}c.send({k:'ink',i,o:s.o||[],n:s.pg.length})});
  c.send({k:'th',v:theme});c.send({k:'sheet',i:cs});c.send({k:'view',z,x:ox+cw/sc()/2,y:oy})}
 /* bağlantı */
-const send=m=>role==='teacher'&&conns.forEach(c=>c.open&&c.send(m)),full=()=>send({k:'full',o:objs,th:theme,n:pg.length});
+const send=m=>(role==='teacher'||['add','full','las'].includes(m.k))&&conns.forEach(c=>c.open&&c.send(m)),full=()=>send({k:'full',o:objs,th:theme,n:pg.length});
 function applyView(m){lv=m;z=m.z;ox=m.x-cw/sc()/2;oy=m.y;dirty=1}
 function onMsg(m){if(m.k==='full'){objs=m.o;theme=m.th;padd(m.n);cur=null}else if(m.k==='cur')cur=m.o;else if(m.k==='add'){objs.push(m.o);cur=null}
- else if(m.k==='th')theme=m.v;else if(m.k==='pg')padd(m.n);else if(m.k==='view')applyView(m);else if(m.k==='las'){laser={x:m.x,y:m.y,t:Date.now()}}
+ else if(m.k==='th')theme=m.v;else if(m.k==='pg')padd(m.n);else if(m.k==='view'){lv=m;if(follow)applyView(m)}else if(m.k==='las'){laser={x:m.x,y:m.y,t:Date.now()}}
  else if(m.k==='doc'){sheets[m.i]={pg:m.hs.map(h=>({h,img:new Image()})),o:[]}}
  else if(m.k==='pimg'){const im=sheets[m.i].pg[m.j].img;im.onload=()=>dirty=1;im.src=m.u}
  else if(m.k==='ink'){if(m.i===cs){objs=m.o;if(!cs)padd(m.n)}else sheets[m.i].o=m.o}
- else if(m.k==='sheet'){sheet(m.i)}else if(m.k==='close'){closeDoc(m.i)}else if(m.k==='scr'){if(!m.on)$('scr').hidden=1}
+ else if(m.k==='sheet'){follow=1;$('bfo').hidden=1;sheet(m.i)}else if(m.k==='close'){closeDoc(m.i)}else if(m.k==='scr'){if(!m.on)$('scr').hidden=1}else if(m.k==='perm'){perm=m.p;applyPerm()}else if(m.k==='media'){medCmd(m)}
  dirty=1}
 async function media(){if(!navigator.mediaDevices){note('Kamera için güvenli adres (https) gerekli');return new MediaStream()}
  try{return await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640,height:480},audio:{echoCancellation:true,noiseSuppression:true}})}
  catch(e){try{return await navigator.mediaDevices.getUserMedia({audio:true})}catch(e2){note('Kamera/mikrofon alınamadı: '+e.name);return new MediaStream()}}}
 function tile(id,s,mute){let v=document.getElementById('v_'+id);if(!v){v=document.createElement('video');v.id='v_'+id;v.autoplay=v.playsInline=true;$('tiles').appendChild(v)}v.muted=!!mute;v.srcObject=s;v.play().catch(()=>{})}
-function onCall(c){calls.push(c);c.on('stream',s=>tile(c.peer,s));c.on('close',()=>{const v=$('v_'+c.peer);v&&v.remove()})}
+function onCall(c){calls.push(c);c.on('stream',s=>{tile(c.peer,s);const d=conns.find(x=>x.peer===c.peer);if(d)tileMedia(d)});c.on('close',()=>{const v=$('v_'+c.peer);v&&v.remove()})}
 async function meet(){if(peer){stopScr();peer.destroy();peer=null;conns=[];calls=[];local&&local.getTracks().forEach(t=>t.stop());$('tiles').innerHTML='';$('bs').textContent='Toplantıyı Başlat';$('bs').className='go t';$('bl').hidden=1;note('Toplantı bitti');return}
  local=await media();tile('self',local,1);try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(_){}
  room='ders-'+Math.random().toString(36).slice(2,8);peer=new Peer(room);
  peer.on('open',()=>{$('bs').textContent='Toplantıyı Bitir';$('bs').className='t';$('bl').hidden=0;note('Oda: '+room)});
  peer.on('call',c=>{c.answer(local);onCall(c)});
- peer.on('connection',c=>{conns.push(c);c.on('open',()=>{syncAll(c);if(scrS)scrCalls.push(peer.call(c.peer,scrS,{metadata:{t:'scr'}}))});c.on('close',()=>conns=conns.filter(x=>x!==c))});
+ peer.on('connection',c=>{c.perm={...defPerm};c.med={...defMed};conns.push(c);c.on('open',()=>{syncAll(c);c.send({k:'perm',p:c.perm});c.send({k:'media',a:c.med.a,v:c.med.v});if(scrS)scrCalls.push(peer.call(c.peer,scrS,{metadata:{t:'scr'}}))});c.on('data',m=>tMsg(c,m));c.on('close',()=>gone(c));c.on('error',()=>gone(c));watchIce(c)});
  peer.on('error',e=>note('Bağlantı hatası: '+e.type))}
 function cpLink(){const u=location.href.split('#')[0]+'#oda='+room;navigator.clipboard?navigator.clipboard.writeText(u).then(()=>note('Bağlantı kopyalandı · Oda: '+room)):prompt('Bağlantı',u)}
-async function joinRoom(){let r=$('rin').value.trim();if(r.includes('oda='))r=r.split('oda=')[1];if(!r)return;$('jm').textContent='Bağlanıyor…';
+async function joinRoom(){const nmv=($('nm').value.trim()||'Öğrenci').slice(0,30);try{localStorage.setItem('nm',nmv)}catch(_){}let r=$('rin').value.trim();if(r.includes('oda='))r=r.split('oda=')[1];if(!r)return;$('jm').textContent='Bağlanıyor…';
  local=await media();tile('self',local,1);try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(_){}
  peer=new Peer();peer.on('call',c=>{c.answer();onScr(c)});peer.on('error',e=>$('jm').textContent='Bağlanılamadı: '+e.type);
- peer.on('open',()=>{const c=peer.connect(r,{reliable:true});conns=[c];c.on('open',()=>{$('join').hidden=1;note('Bağlandı')});c.on('data',onMsg);c.on('close',()=>note('Bağlantı koptu'));onCall(peer.call(r,local))})}
+ peer.on('open',()=>{const c=peer.connect(r,{reliable:true});conns=[c];c.on('open',()=>{c.send({k:'hi',name:nmv});$('join').hidden=1;note('Bağlandı')});c.on('data',onMsg);c.on('close',()=>{note('Bağlantı koptu');toast('Bağlantı koptu')});onCall(peer.call(r,local))})}
 function tg(k,b){const t=local&&local.getTracks().filter(x=>x.kind===k);if(!t||!t.length)return;const on=!t[0].enabled;t.forEach(x=>x.enabled=on);b.textContent=(k==='audio'?'Mikrofon: ':'Kamera: ')+(on?'Açık':'Kapalı')}
 async function swCam(){if(!local||!navigator.mediaDevices)return;const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='videoinput');if(d.length<2)return note('Başka kamera bulunamadı');
  const o=local.getVideoTracks()[0],i=d.findIndex(x=>o&&x.deviceId===o.getSettings().deviceId);
